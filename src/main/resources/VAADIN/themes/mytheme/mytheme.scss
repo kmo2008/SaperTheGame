@@ -1,0 +1,11 @@
+@import '../valo/valo.scss';
+
+@mixin mytheme {
+  @include valo;
+  .v-gridlayout-slot {
+    border-style: solid;
+    border-color: black;
+    border-width: 1px;
+    margin: 3px;
+  }
+}

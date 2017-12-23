@@ -1,7 +1,10 @@
 package pl.kmo2008.saperthegame.Logic;
 
+import org.springframework.stereotype.Service;
+
 import java.util.Random;
 
+@Service
 public final class Board {
     private final int EASY_HEIGHT=8;
     private final int EASY_WIDTH=8;
@@ -369,7 +372,7 @@ public final class Board {
      * @param x given horizontal position
      * @param y given vertical position
      */
-    public void questionMark(int x,int y)
+    public void questionmark(int x,int y)
     {
         try
         {
@@ -400,6 +403,15 @@ public final class Board {
 
         }
     }
+
+    public Field[][] getFields() {
+        return fields;
+    }
+
+    public void setFields(Field[][] fields) {
+        this.fields = fields;
+    }
+
     /**
      * Temporary class used for testing display in console
      * Delete in release version

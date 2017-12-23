@@ -1,5 +1,8 @@
 package pl.kmo2008.saperthegame.Logic;
 
+import org.springframework.stereotype.Service;
+
+@Service
 public class Field {
     /**
      * State of the field
