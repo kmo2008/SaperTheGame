@@ -32,7 +32,15 @@ public final class Board {
     /**
      * Number of unflagged mines
      */
+    private int unflagedMines;
+    /**
+     * Number of mines on board
+     */
     private int mines;
+    /**
+     * Number of revealed fields
+     */
+    private int fieldsRevealed;
     /**
      * Flags if it's first move
      */
@@ -52,7 +60,7 @@ public final class Board {
      */
     public void revealField(int x,int y)
     {
-        if(firstMove==true)
+        if(firstMove)
         {
             //Reshuffles bord if mine revealed in first move
             firstMove=false;
@@ -61,6 +69,7 @@ public final class Board {
                 shuffle(fields);
             }
             calculateFieldStates();
+            fieldsRevealed++;
         }
         if(fields[y][x].getVisibleState()==VisibleState.UNREVEALED)
         {
@@ -68,6 +77,7 @@ public final class Board {
             //Checks if player revealed a mine, if yes returns false meaning the game is lost
             if(fields[y][x].getState()==State.MINE)
             {
+                fields[y][x].setVisibleState(VisibleState.MINE_BLOWN);
                 revealAllFields();
                 gameLost=true;
                 return;
@@ -83,6 +93,7 @@ public final class Board {
                 if (y < height - 1) {revealField(x, y + 1);}
                 if (y < height - 1 && x < width - 1) {revealField(x + 1, y + 1);}
             }
+            fieldsRevealed++;
         }
         gameWon=checkIfGameWon();
     }
@@ -94,7 +105,15 @@ public final class Board {
     {
         for(int i = 0;i<height;i++) {
             for (int j = 0; j < width; j++) {
-                fields[i][j].setVisibleState(VisibleState.REVEALED);
+                if(fields[i][j].getVisibleState()==VisibleState.FLAGGED&&fields[i][j].getState()!=State.MINE)
+                {
+                    fields[i][j].setVisibleState(VisibleState.WRONGLY_FLAGGED);
+                }
+                if(fields[i][j].getVisibleState()==VisibleState.UNREVEALED||
+                        fields[i][j].getVisibleState()==VisibleState.QUESTION_MARK)
+                {
+                    fields[i][j].setVisibleState(VisibleState.REVEALED);
+                }
             }
         }
     }
@@ -211,6 +230,7 @@ public final class Board {
         height=EASY_HEIGHT;
         width=EASY_WIDTH;
         mines=EASY_MINES;
+        unflagedMines=mines;
         generate(height,width,mines);
     }
 
@@ -222,6 +242,7 @@ public final class Board {
         height=NORMAL_HEIGHT;
         width=NORMAL_WIDTH;
         mines=NORMAL_MINES;
+        unflagedMines=mines;
         generate(height,width,mines);
     }
 
@@ -233,6 +254,7 @@ public final class Board {
         height=HARD_HEIGHT;
         width=HARD_WIDTH;
         mines=HARD_MINES;
+        unflagedMines=mines;
         generate(height,width,mines);
     }
 
@@ -242,7 +264,12 @@ public final class Board {
      */
     private boolean checkIfGameWon()
     {
-        for(int i = 0;i<height;i++) {
+        if(width*height==mines+fieldsRevealed)
+        {
+            return true;
+        }
+        return false;
+        /*for(int i = 0;i<height;i++) {
             for (int j = 0; j < width; j++)
             {
                 if(!(fields[i][j].getState()==State.MINE||fields[i][j].getVisibleState()==VisibleState.REVEALED))
@@ -251,7 +278,7 @@ public final class Board {
                 }
             }
         }
-        return true;
+        return true;*/
     }
 
     /**
@@ -274,8 +301,8 @@ public final class Board {
      * Returns number of unflagged mines
      * @return number of unflagged mines
      */
-    public int getMines() {
-        return mines;
+    public int getUnflagedMinesines() {
+        return unflagedMines;
     }
 
     /**
@@ -324,6 +351,7 @@ public final class Board {
         this.height=height;
         this.width=width;
         this.mines=mines;
+        unflagedMines=mines;
         generate(height,width,mines);
     }
 
@@ -337,7 +365,7 @@ public final class Board {
         try
         {
             if(fields[y][x].getVisibleState()!=VisibleState.REVEALED) {
-                mines--;
+                unflagedMines--;
                 fields[y][x].setVisibleState(VisibleState.FLAGGED);
             }
         }
@@ -358,7 +386,7 @@ public final class Board {
         {
             if(fields[y][x].getVisibleState()==VisibleState.FLAGGED) {
                 fields[y][x].setVisibleState(VisibleState.UNREVEALED);
-                mines++;
+                unflagedMines++;
             }
         }
         catch (IndexOutOfBoundsException e)
