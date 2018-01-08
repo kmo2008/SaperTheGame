@@ -16,9 +16,11 @@ public class Field {
      * State of the field visible to player
      * Possible states:
      * REVEALED - The field has been revealed, ether by clicking on it or clicking on neighbouring empty field
-     * UNREVEALED - The field hasn't beed reveled, it's default state
-     * FLAGED - The field has been marked by a player as potential mine position
+     * UNREVEALED - The field hasn't been reveled, it's default state
+     * FLAGGED - The field has been marked by a player as potential mine position
      * QUESTION_MARK - The field has been marked by a player as uncertain
+     * MINE_BLOWN - The field has been revealed with bomb on it, direct reason of loosing the game
+     * WRONGLY_FLAGGED - The field has been flagged but don't contain bomb, only after loosing the game
      */
     private VisibleState visibleState;
 
@@ -55,7 +57,7 @@ public class Field {
      * Sets state of the field to given state
      * @param state given state
      */
-    public void setState(State state) {
+    void setState(State state) {
         this.state = state;
     }
 
@@ -71,7 +73,7 @@ public class Field {
      * Sets state of the field visible to player to given state
      * @param visibleState given state
      */
-    public void setVisibleState(VisibleState visibleState) {
+    void setVisibleState(VisibleState visibleState) {
         this.visibleState = visibleState;
     }
 }
