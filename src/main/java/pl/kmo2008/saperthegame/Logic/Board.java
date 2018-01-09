@@ -128,6 +128,7 @@ public final class Board {
         firstMove=true;
         gameLost = false;
         gameWon = false;
+        fieldsRevealed=0;
         fields = new Field[height][width];
         for(int i = 0;i<height;i++) {
             for (int j = 0; j < width; j++) {
