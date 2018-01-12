@@ -54,7 +54,6 @@ public class home extends UI {
          * Grid settings and listenners
          *
          */
-        //game.setStyleName("gridgame");
         game.setSizeUndefined();
         head.setSizeFull();
         game.setHeightUndefined();
@@ -65,34 +64,35 @@ public class home extends UI {
 
         game.addLayoutClickListener(clickEvent -> {
             Component child = clickEvent.getChildComponent();
-            String[] tokens = child.getId().split("x");
-            int row = Integer.parseInt(tokens[0]);
-            int col = Integer.parseInt(tokens[1]);
-            if (gameboard.getFieldAt(row, col).getVisibleState() != VisibleState.REVEALED) {
-                if (clickEvent.getButton() == MouseEventDetails.MouseButton.RIGHT) {
-                    if (gameboard.getFieldAt(row, col).getVisibleState() != VisibleState.FLAGGED
-                            && gameboard.getFieldAt(row, col).getVisibleState() != VisibleState.QUESTION_MARK)
-                        gameboard.flag(row, col);
-                    else if (gameboard.getFieldAt(row, col).getVisibleState() == VisibleState.FLAGGED) {
-                        gameboard.unflag(row, col);
-                        gameboard.questionmark(row, col);
-                    } else {
-                        gameboard.unquestionmark(row, col);
+            if(child != null) {
+                String[] tokens = child.getId().split("x");
+                int row = Integer.parseInt(tokens[0]);
+                int col = Integer.parseInt(tokens[1]);
+                if (gameboard.getFieldAt(row, col).getVisibleState() != VisibleState.REVEALED) {
+                    if (clickEvent.getButton() == MouseEventDetails.MouseButton.RIGHT) {
+                        if (gameboard.getFieldAt(row, col).getVisibleState() != VisibleState.FLAGGED
+                                && gameboard.getFieldAt(row, col).getVisibleState() != VisibleState.QUESTION_MARK)
+                            gameboard.flag(row, col);
+                        else if (gameboard.getFieldAt(row, col).getVisibleState() == VisibleState.FLAGGED) {
+                            gameboard.unflag(row, col);
+                            gameboard.questionmark(row, col);
+                        } else {
+                            gameboard.unquestionmark(row, col);
+                        }
                     }
+                    if (clickEvent.getButton() == MouseEventDetails.MouseButton.LEFT) {
+                        gameboard.revealField(row, col);
+                    }
+                    refreshGrid();
                 }
-                if (clickEvent.getButton() == MouseEventDetails.MouseButton.LEFT) {
-                    gameboard.revealField(row, col);
-                }
-                refreshGrid();
             }
-
         });
 
 
     }
 
     ThemeResource blankfield = new ThemeResource("img/clear-12.png");
-    ThemeResource minenot = new ThemeResource("img/minenotdetected-12.png");
+    ThemeResource minenot = new ThemeResource("img/mine2-12.png");
     ThemeResource one = new ThemeResource("img/1.png");
     ThemeResource two = new ThemeResource("img/2.png");
     ThemeResource three = new ThemeResource("img/3.png");
@@ -103,12 +103,14 @@ public class home extends UI {
     ThemeResource eigth = new ThemeResource("img/8.png");
     ThemeResource flagfield = new ThemeResource("img/flagfield-12.png");
     ThemeResource markfield = new ThemeResource("img/qmark-12.png");
+    ThemeResource wroglyFlaged = new ThemeResource("img/wrongly_flagged-12.png");
+    ThemeResource mineBlown = new ThemeResource("img/mine_blown.png");
 
     private void refreshGrid() {
         Field fieldx = null;
         for (int row = 0; row < game.getRows(); row++) {
             for (int col = 0; col < game.getColumns(); col++) {
-                final Component field = new Image();
+                Component field = new Image();
                 ThemeResource resource = null;
                 fieldx = gameboard.getFieldAt(col, row);
                 resource = getFieldResurce(fieldx);
@@ -117,8 +119,16 @@ public class home extends UI {
                     field.setIcon(resource);
                     field.setId(col + "x" + row);
                     game.removeComponent(col, row);
+                    field.setWidth("40px");
+                    field.setHeight("5px");
                     game.addComponent(field, col, row);
                 }
+            }
+        }
+        for (int col=0; col<game.getColumns(); col++) {
+            for (int row = 0; row < game.getRows(); row++) {
+                Component c = game.getComponent(col, row);
+                game.setComponentAlignment(c, Alignment.TOP_CENTER);
             }
         }
     }
@@ -129,8 +139,7 @@ public class home extends UI {
             resource = blankfield;
         else if (fieldx.getVisibleState() == VisibleState.REVEALED) {
             if (fieldx.getState() == State.EMPTY) resource = null;
-            else if (fieldx.getState() == State.MINE)
-                resource = minenot;
+            else if (fieldx.getState() == State.MINE) resource = minenot;
             else if (fieldx.getState() == State.ONE) resource = one;
             else if (fieldx.getState() == State.TWO) resource = two;
             else if (fieldx.getState() == State.THREE) resource = three;
@@ -143,6 +152,10 @@ public class home extends UI {
             resource = flagfield;
         else if (fieldx.getVisibleState() == VisibleState.QUESTION_MARK)
             resource = markfield;
+        else if (fieldx.getVisibleState() == VisibleState.WRONGLY_FLAGGED)
+            resource = wroglyFlaged;
+        else if (fieldx.getVisibleState() == VisibleState.MINE_BLOWN)
+            resource = mineBlown;
         return resource;
     }
 
@@ -155,13 +168,22 @@ public class home extends UI {
         Field fieldx = null;
         for (int row = 0; row < game.getRows(); row++) {
             for (int col = 0; col < game.getColumns(); col++) {
-                final Component field = new Image();
+                Component field = new Image();
                 ThemeResource resource = null;
                 fieldx = gameboard.getFieldAt(col, row);
                 resource = getFieldResurce(fieldx);
                 field.setIcon(resource);
                 field.setId(col + "x" + row);
+                field.setWidth("40px");
+                field.setHeight("5px");
                 game.addComponent(field);
+            }
+        }
+        for (int col=0; col<game.getColumns(); col++) {
+            for (int row = 0; row < game.getRows(); row++) {
+                Component c = game.getComponent(col, row);
+                game.setComponentAlignment(c, new Alignment(AlignmentInfo.Bits.ALIGNMENT_VERTICAL_CENTER |
+                        AlignmentInfo.Bits.ALIGNMENT_HORIZONTAL_CENTER));
             }
         }
     }
