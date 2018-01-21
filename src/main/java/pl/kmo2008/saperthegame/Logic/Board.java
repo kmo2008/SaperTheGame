@@ -101,7 +101,7 @@ public final class Board {
     /**
      * Reveals all fields on the board
      */
-    private void revealAllFields()
+    public void revealAllFields()
     {
         for(int i = 0;i<height;i++) {
             for (int j = 0; j < width; j++) {
@@ -288,6 +288,14 @@ public final class Board {
      */
     public int getHeight() {
         return height;
+    }
+
+    /**
+     * Return count of mines
+     * @return count of mines
+     */
+    public int getMines() {
+        return mines;
     }
 
     /**

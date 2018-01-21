@@ -1,6 +1,7 @@
 @import "addons";
 @import "mytheme";
-
+@include font-face('digital-7',
+        '../../../../mytheme/fonts/digital-7', 400, normal);
 
 .mytheme{
   @include addons;

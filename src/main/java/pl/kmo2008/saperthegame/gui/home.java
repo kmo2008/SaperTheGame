@@ -4,15 +4,18 @@ import com.vaadin.annotations.Theme;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.shared.MouseEventDetails;
-import com.vaadin.shared.ui.AlignmentInfo;
-import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.ui.*;
+import com.vaadin.ui.Component;
+import com.vaadin.ui.GridLayout;
+import com.vaadin.ui.Image;
+import com.vaadin.ui.Label;
 import org.springframework.beans.factory.annotation.Autowired;
 import pl.kmo2008.saperthegame.Logic.Board;
 import pl.kmo2008.saperthegame.Logic.Field;
 import pl.kmo2008.saperthegame.Logic.State;
 import pl.kmo2008.saperthegame.Logic.VisibleState;
+
 
 @Theme("mytheme")
 @SpringUI
@@ -20,77 +23,22 @@ public class home extends UI {
     @Autowired
     Board gameboard;
 
+
+    private int flagcount = 0;
     GridLayout game = new GridLayout();
+    /**
+     * Component declarations
+     */
+    Label gameTime = new Label("00:00");
+    Image smiley = new Image();
+    Label minesLeft = new Label("0");
 
-    int[][] ids;
+    ThemeResource[][] resources;
 
-    @Override
-    protected void init(VaadinRequest request) {
-        /**
-         * Game default settings
-         */
-        gameboard.normalMode();
-        /**
-         * Vertical layouts
-         */
-        VerticalLayout head = new VerticalLayout();
-        VerticalLayout ranks = new VerticalLayout();
-
-        /**
-         * Horizontal layouts
-         */
-        HorizontalLayout gameAndRanks = new HorizontalLayout();
-
-        /**
-         * Layouts merge
-         */
-        gameAndRanks.addComponents(ranks, game);
-        head.addComponents(gameAndRanks);
-        /**
-         * Content settings
-         */
-        setContent(head);
-        /**
-         * Grid settings and listenners
-         *
-         */
-        game.setSizeUndefined();
-        head.setSizeFull();
-        game.setHeightUndefined();
-        game.setRows(gameboard.getHeight());
-        game.setColumns(gameboard.getWidth());
-        generateMatrixGrid(gameboard.getHeight(), gameboard.getWidth());
-
-
-        game.addLayoutClickListener(clickEvent -> {
-            Component child = clickEvent.getChildComponent();
-            if(child != null) {
-                String[] tokens = child.getId().split("x");
-                int row = Integer.parseInt(tokens[0]);
-                int col = Integer.parseInt(tokens[1]);
-                if (gameboard.getFieldAt(row, col).getVisibleState() != VisibleState.REVEALED) {
-                    if (clickEvent.getButton() == MouseEventDetails.MouseButton.RIGHT) {
-                        if (gameboard.getFieldAt(row, col).getVisibleState() != VisibleState.FLAGGED
-                                && gameboard.getFieldAt(row, col).getVisibleState() != VisibleState.QUESTION_MARK)
-                            gameboard.flag(row, col);
-                        else if (gameboard.getFieldAt(row, col).getVisibleState() == VisibleState.FLAGGED) {
-                            gameboard.unflag(row, col);
-                            gameboard.questionmark(row, col);
-                        } else {
-                            gameboard.unquestionmark(row, col);
-                        }
-                    }
-                    if (clickEvent.getButton() == MouseEventDetails.MouseButton.LEFT) {
-                        gameboard.revealField(row, col);
-                    }
-                    refreshGrid();
-                }
-            }
-        });
-
-
-    }
-
+    /**
+     * Resources
+     */
+    ThemeResource blank = new ThemeResource("img/blank.png");
     ThemeResource blankfield = new ThemeResource("img/clear-12.png");
     ThemeResource minenot = new ThemeResource("img/mine2-12.png");
     ThemeResource one = new ThemeResource("img/1.png");
@@ -105,30 +53,130 @@ public class home extends UI {
     ThemeResource markfield = new ThemeResource("img/qmark-12.png");
     ThemeResource wroglyFlaged = new ThemeResource("img/wrongly_flagged-12.png");
     ThemeResource mineBlown = new ThemeResource("img/mine_blown.png");
+    ThemeResource smiley1 = new ThemeResource("img/smiley1.png");
+    ThemeResource smiley2 = new ThemeResource("img/smiley2.png");
+    ThemeResource smiley4 = new ThemeResource("img/smiley4.png");
+
+
+
+    @Override
+    protected void init(VaadinRequest request) {
+
+
+        /**
+         * Game default settings
+         */
+        gameboard.easyMode();
+
+
+        /**
+         * Vertical layouts
+         */
+        VerticalLayout head = new VerticalLayout();
+        VerticalLayout gameBox = new VerticalLayout();
+        VerticalLayout ranks = new VerticalLayout();
+
+        /**
+         * Horizontal layouts
+         */
+        HorizontalLayout gameHead = new HorizontalLayout();
+        HorizontalLayout gameAndRanks = new HorizontalLayout();
+
+        /**
+         * Layouts merge
+         */
+        gameHead.addComponents(gameTime, smiley, minesLeft);
+        gameBox.addComponents(gameHead, game);
+        gameAndRanks.addComponents(ranks, gameBox);
+        head.addComponents(gameAndRanks);
+        /**
+         * Content settings
+         */
+        setContent(head);
+
+        /**
+         * Component settings
+         */
+        gameTime.setStyleName("labelfont");
+        minesLeft.setStyleName("labelfont");
+        smiley.setSource(smiley1);
+
+        /**
+         * Layout settings and listenners
+         *
+         */
+        gameBox.setComponentAlignment(gameHead, Alignment.TOP_CENTER);
+        gameHead.setComponentAlignment(gameTime, Alignment.BOTTOM_LEFT);
+        gameHead.setComponentAlignment(smiley, Alignment.BOTTOM_CENTER);
+        gameHead.setComponentAlignment(minesLeft, Alignment.BOTTOM_RIGHT);
+        game.setSizeUndefined();
+        gameHead.setStyleName("gameHead");
+        gameHead.setMargin(true);
+        String gameHeadWidth = (gameboard.getWidth() + 1) * 32 + "px";
+        gameHead.setWidth(gameHeadWidth);
+        head.setSizeFull();
+        game.setMargin(true);
+        game.setHeightUndefined();
+        game.setRows(gameboard.getHeight());
+        game.setColumns(gameboard.getWidth());
+        game.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
+        generateMatrixGrid(gameboard.getHeight(), gameboard.getWidth());
+
+
+        game.addLayoutClickListener(clickEvent -> {
+            Component child = clickEvent.getChildComponent();
+            if (child != null) {
+                String[] tokens = child.getId().split("x");
+                int row = Integer.parseInt(tokens[0]);
+                int col = Integer.parseInt(tokens[1]);
+                if (gameboard.getFieldAt(row, col).getVisibleState() != VisibleState.REVEALED) {
+                    if (clickEvent.getButton() == MouseEventDetails.MouseButton.RIGHT) {
+                        if (gameboard.getFieldAt(row, col).getVisibleState() != VisibleState.FLAGGED
+                                && gameboard.getFieldAt(row, col).getVisibleState() != VisibleState.QUESTION_MARK) {
+                            gameboard.flag(row, col);
+                            flagcount++;
+                        } else if (gameboard.getFieldAt(row, col).getVisibleState() == VisibleState.FLAGGED) {
+                            gameboard.unflag(row, col);
+                            flagcount--;
+                            gameboard.questionmark(row, col);
+                        } else {
+                            gameboard.unquestionmark(row, col);
+                        }
+                    }
+                    if (clickEvent.getButton() == MouseEventDetails.MouseButton.LEFT) {
+                        gameboard.revealField(row, col);
+                    }
+                    refreshGrid();
+                }
+            }
+            if (gameboard.isGameWon()) {
+                smiley.setSource(smiley4);
+                minesLeft.setValue("0");
+                gameboard.revealAllFields();
+                refreshGrid();
+            }
+            if (gameboard.isGameLost()) smiley.setSource(smiley2);
+        });
+    }
 
     private void refreshGrid() {
         Field fieldx = null;
+        int mines = gameboard.getMines() - flagcount;
+        minesLeft.setValue(Integer.toString(mines));
         for (int row = 0; row < game.getRows(); row++) {
             for (int col = 0; col < game.getColumns(); col++) {
-                Component field = new Image();
+                Image field = new Image();
                 ThemeResource resource = null;
                 fieldx = gameboard.getFieldAt(col, row);
                 resource = getFieldResurce(fieldx);
-                Component comp = game.getComponent(col, row);
-                if (comp.getIcon() != resource) {
-                    field.setIcon(resource);
+                if(gameboard.isGameWon() && resource == mineBlown ) resource = flagfield;
+                ThemeResource comp = resources[col][row];
+                if (comp != resource) {
+                    field.setSource(resource);
                     field.setId(col + "x" + row);
                     game.removeComponent(col, row);
-                    field.setWidth("40px");
-                    field.setHeight("5px");
                     game.addComponent(field, col, row);
                 }
-            }
-        }
-        for (int col=0; col<game.getColumns(); col++) {
-            for (int row = 0; row < game.getRows(); row++) {
-                Component c = game.getComponent(col, row);
-                game.setComponentAlignment(c, Alignment.TOP_CENTER);
             }
         }
     }
@@ -138,7 +186,7 @@ public class home extends UI {
         if (fieldx.getVisibleState() == VisibleState.UNREVEALED)
             resource = blankfield;
         else if (fieldx.getVisibleState() == VisibleState.REVEALED) {
-            if (fieldx.getState() == State.EMPTY) resource = null;
+            if (fieldx.getState() == State.EMPTY) resource = blank;
             else if (fieldx.getState() == State.MINE) resource = minenot;
             else if (fieldx.getState() == State.ONE) resource = one;
             else if (fieldx.getState() == State.TWO) resource = two;
@@ -162,28 +210,20 @@ public class home extends UI {
 
     private void generateMatrixGrid(final int rows, final int columns) {
         game.removeAllComponents();
-        //game.setRows(rows);
-        //game.setColumns(columns);
         game.setHeight("100%");
         Field fieldx = null;
+        minesLeft.setValue(Integer.toString(gameboard.getMines()));
         for (int row = 0; row < game.getRows(); row++) {
             for (int col = 0; col < game.getColumns(); col++) {
-                Component field = new Image();
+                Image field = new Image();
+                resources = new ThemeResource[columns][rows];
                 ThemeResource resource = null;
                 fieldx = gameboard.getFieldAt(col, row);
                 resource = getFieldResurce(fieldx);
-                field.setIcon(resource);
+                resources[col][row] = resource;
+                field.setSource(resource);
                 field.setId(col + "x" + row);
-                field.setWidth("40px");
-                field.setHeight("5px");
                 game.addComponent(field);
-            }
-        }
-        for (int col=0; col<game.getColumns(); col++) {
-            for (int row = 0; row < game.getRows(); row++) {
-                Component c = game.getComponent(col, row);
-                game.setComponentAlignment(c, new Alignment(AlignmentInfo.Bits.ALIGNMENT_VERTICAL_CENTER |
-                        AlignmentInfo.Bits.ALIGNMENT_HORIZONTAL_CENTER));
             }
         }
     }
