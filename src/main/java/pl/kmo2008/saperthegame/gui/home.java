@@ -1,5 +1,6 @@
 package pl.kmo2008.saperthegame.gui;
 
+import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.server.VaadinRequest;
@@ -16,9 +17,13 @@ import pl.kmo2008.saperthegame.Logic.Field;
 import pl.kmo2008.saperthegame.Logic.State;
 import pl.kmo2008.saperthegame.Logic.VisibleState;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 
 @Theme("mytheme")
 @SpringUI
+@Push
 public class home extends UI {
     @Autowired
     Board gameboard;
@@ -32,7 +37,6 @@ public class home extends UI {
     Label gameTime = new Label("00:00");
     Image smiley = new Image();
     Label minesLeft = new Label("0");
-
     ThemeResource[][] resources;
 
     /**
@@ -57,11 +61,25 @@ public class home extends UI {
     ThemeResource smiley2 = new ThemeResource("img/smiley2.png");
     ThemeResource smiley4 = new ThemeResource("img/smiley4.png");
 
+    long secondsx = 0;
+    boolean started = false;
+    String timeRecord = null;
 
+    public long getSecondsx() {
+        return secondsx;
+    }
+
+    public void addSecondsx(long secondsx) {
+        this.secondsx++;
+    }
 
     @Override
     protected void init(VaadinRequest request) {
 
+
+        UI ui = getUI();
+        int i = 0;
+        Timer t = new Timer();
 
         /**
          * Game default settings
@@ -124,6 +142,25 @@ public class home extends UI {
 
 
         game.addLayoutClickListener(clickEvent -> {
+            if (!started) {
+                t.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        ui.access(new Runnable() {
+                            @Override
+                            public void run() {
+                                addSecondsx(1);
+                                String timeString = null;
+                                long seconds = getSecondsx();
+                                timeString = getTimeString(seconds);
+                                gameTime.setValue(timeString);
+                                ui.push();
+                            }
+                        });
+                    }
+                }, 0, 1000);
+                started = true;
+            }
             Component child = clickEvent.getChildComponent();
             if (child != null) {
                 String[] tokens = child.getId().split("x");
@@ -154,9 +191,48 @@ public class home extends UI {
                 minesLeft.setValue("0");
                 gameboard.revealAllFields();
                 refreshGrid();
+                timeRecord = getTimeString(getSecondsx());
+                System.out.println(timeRecord);
+                t.cancel();
+
             }
-            if (gameboard.isGameLost()) smiley.setSource(smiley2);
+            if (gameboard.isGameLost()) {
+                smiley.setSource(smiley2);
+                t.cancel();
+            }
         });
+    }
+
+    public String getTimeString(Long seconds) {
+        String timeString = null;
+        long minutes = 0;
+        long hours = 0;
+        if (seconds < 10) timeString = "00:0" + Long.toString(seconds);
+        else if (seconds < 60) timeString = "00:" + Long.toString(seconds);
+        else if (seconds < 660) {
+            while (seconds > 60) {
+                seconds -= 60;
+                minutes++;
+            }
+            timeString = "0" + Long.toString(minutes) + ":" + Long.toString(seconds);
+        } else if (seconds < 3600) {
+            while (seconds > 60) {
+                seconds -= 60;
+                minutes++;
+            }
+            timeString = Long.toString(minutes) + ":" + Long.toString(seconds);
+        } else {
+            while (seconds > 3600) {
+                seconds -= 3600;
+                hours++;
+            }
+            while (seconds > 60) {
+                seconds -= 60;
+                minutes++;
+            }
+            timeString = Long.toString(hours) + ":" + Long.toString(minutes) + ":" + Long.toString(seconds);
+        }
+        return timeString;
     }
 
     private void refreshGrid() {
@@ -169,7 +245,7 @@ public class home extends UI {
                 ThemeResource resource = null;
                 fieldx = gameboard.getFieldAt(col, row);
                 resource = getFieldResurce(fieldx);
-                if(gameboard.isGameWon() && resource == mineBlown ) resource = flagfield;
+                if (gameboard.isGameWon() && resource == mineBlown) resource = flagfield;
                 ThemeResource comp = resources[col][row];
                 if (comp != resource) {
                     field.setSource(resource);
