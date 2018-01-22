@@ -147,6 +147,7 @@ public class Home extends UI {
         gameTime.setStyleName("labelfont");
         minesLeft.setStyleName("labelfont");
         smiley.setSource(smiley1);
+        saveRecordWindow.center();
 
         /**
          * Layout settings and listenners
