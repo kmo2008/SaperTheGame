@@ -1,7 +1,8 @@
-package pl.kmo2008.saperthegame.gui;
+package pl.kmo2008.saperthegame.Gui;
 
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
+import com.vaadin.server.Page;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.shared.MouseEventDetails;
@@ -12,11 +13,11 @@ import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.Image;
 import com.vaadin.ui.Label;
 import org.springframework.beans.factory.annotation.Autowired;
-import pl.kmo2008.saperthegame.Logic.Board;
-import pl.kmo2008.saperthegame.Logic.Field;
-import pl.kmo2008.saperthegame.Logic.State;
-import pl.kmo2008.saperthegame.Logic.VisibleState;
+import pl.kmo2008.saperthegame.Entities.Rank;
+import pl.kmo2008.saperthegame.Logic.*;
+import pl.kmo2008.saperthegame.Repos.Rankrepo;
 
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -24,10 +25,12 @@ import java.util.TimerTask;
 @Theme("mytheme")
 @SpringUI
 @Push
-public class home extends UI {
+public class Home extends UI {
     @Autowired
     Board gameboard;
 
+    @Autowired
+    Rankrepo rankrepo;
 
     private int flagcount = 0;
     GridLayout game = new GridLayout();
@@ -38,6 +41,23 @@ public class home extends UI {
     Image smiley = new Image();
     Label minesLeft = new Label("0");
     ThemeResource[][] resources;
+    Button easyButton = new Button("Easy Mode");
+    Button mediumButton = new Button("Medium Mode");
+    Button hardButton = new Button("Hard Mode");
+    TextField customWidth = new TextField("Szerokość:");
+    TextField customHight = new TextField("Wysokość:");
+    TextField customMines = new TextField("Ilosć min: ");
+    Button startCustom = new Button("Start Custom Mode");
+    Button customMode = new Button("Custom Mode");
+    Window customGameWindow = new Window("Custom Game");
+    Window saveRecordWindow = new Window("WYGRALES!!!");
+    Label recordLabel = new Label("Wygrałeś i znalazłeś się w TOP 10 w tym trybie. Wypełnij, aby zapisać się w rankingu.");
+    TextField nickname = new TextField("Twój nick:");
+    Button saveRecord = new Button("Zapisz");
+    Grid<Rank> gridRankEasy = new Grid<>(Rank.class);
+    Grid<Rank> gridRankMedium = new Grid<>(Rank.class);
+    Grid<Rank> gridRankHard = new Grid<>(Rank.class);
+    Accordion ranks = new Accordion();
 
     /**
      * Resources
@@ -64,6 +84,7 @@ public class home extends UI {
     long secondsx = 0;
     boolean started = false;
     String timeRecord = null;
+    int type = 1;
 
     public long getSecondsx() {
         return secondsx;
@@ -73,18 +94,18 @@ public class home extends UI {
         this.secondsx++;
     }
 
+    UI ui = getUI();
+    Timer t = new Timer();
+    String gameHeadWidth;
+
     @Override
     protected void init(VaadinRequest request) {
 
 
-        UI ui = getUI();
-        int i = 0;
-        Timer t = new Timer();
-
         /**
          * Game default settings
          */
-        gameboard.easyMode();
+        gameboard.normalMode();
 
 
         /**
@@ -92,7 +113,9 @@ public class home extends UI {
          */
         VerticalLayout head = new VerticalLayout();
         VerticalLayout gameBox = new VerticalLayout();
-        VerticalLayout ranks = new VerticalLayout();
+        VerticalLayout windowLayout = new VerticalLayout();
+        VerticalLayout recordLayout = new VerticalLayout();
+        VerticalLayout menu = new VerticalLayout();
 
         /**
          * Horizontal layouts
@@ -102,10 +125,16 @@ public class home extends UI {
 
         /**
          * Layouts merge
+         *
          */
+        recordLayout.addComponents(recordLabel,nickname,saveRecord);
+        windowLayout.addComponents(customWidth, customHight, customMines, startCustom);
+        customGameWindow.setContent(windowLayout);
+        saveRecordWindow.setContent(recordLayout);
+        menu.addComponents(easyButton, mediumButton, hardButton, customMode, ranks);
         gameHead.addComponents(gameTime, smiley, minesLeft);
         gameBox.addComponents(gameHead, game);
-        gameAndRanks.addComponents(ranks, gameBox);
+        gameAndRanks.addComponents(menu, gameBox);
         head.addComponents(gameAndRanks);
         /**
          * Content settings
@@ -123,6 +152,21 @@ public class home extends UI {
          * Layout settings and listenners
          *
          */
+        gridRankEasy.setColumnOrder("id","nickname","time","type");
+        gridRankEasy.removeColumn("id");
+        gridRankEasy.removeColumn("type");
+        gridRankMedium.setColumnOrder("id","nickname","time","type");
+        gridRankMedium.removeColumn("id");
+        gridRankMedium.removeColumn("type");
+        gridRankHard.setColumnOrder("id","nickname","time","type");
+        gridRankHard.removeColumn("id");
+        gridRankHard.removeColumn("type");
+        gridRankEasy.setItems(rankrepo.getTopOfEasy(9999999L));
+        gridRankMedium.setItems(rankrepo.getTopOfMedium(9999999L));
+        gridRankHard.setItems(rankrepo.getTopOfHard(9999999L));
+        ranks.addTab(gridRankEasy, "Easy Mode");
+        ranks.addTab(gridRankMedium, "Medium Mode");
+        ranks.addTab(gridRankHard, "Hard Mode");
         gameBox.setComponentAlignment(gameHead, Alignment.TOP_CENTER);
         gameHead.setComponentAlignment(gameTime, Alignment.BOTTOM_LEFT);
         gameHead.setComponentAlignment(smiley, Alignment.BOTTOM_CENTER);
@@ -130,7 +174,7 @@ public class home extends UI {
         game.setSizeUndefined();
         gameHead.setStyleName("gameHead");
         gameHead.setMargin(true);
-        String gameHeadWidth = (gameboard.getWidth() + 1) * 32 + "px";
+        gameHeadWidth = (gameboard.getWidth() + 1) * 32 + "px";
         gameHead.setWidth(gameHeadWidth);
         head.setSizeFull();
         game.setMargin(true);
@@ -138,28 +182,86 @@ public class home extends UI {
         game.setRows(gameboard.getHeight());
         game.setColumns(gameboard.getWidth());
         game.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
-        generateMatrixGrid(gameboard.getHeight(), gameboard.getWidth());
+        generateMatrixGrid();
 
+
+        easyButton.addClickListener(clickEvent -> {
+            gameboard.easyMode();
+            type = 0;
+            generateMatrixGrid();
+            reloadGame();
+            t.cancel();
+            started = false;
+            gameHeadWidth = (gameboard.getWidth() + 1) * 32 + "px";
+            gameHead.setWidth(gameHeadWidth);
+        });
+
+        mediumButton.addClickListener(clickEvent -> {
+            gameboard.normalMode();
+            type = 1;
+            generateMatrixGrid();
+            reloadGame();
+            t.cancel();
+            started = false;
+            gameHeadWidth = (gameboard.getWidth() + 1) * 32 + "px";
+            gameHead.setWidth(gameHeadWidth);
+        });
+        hardButton.addClickListener(clickEvent -> {
+            gameboard.hardMode();
+            type = 3;
+            generateMatrixGrid();
+            reloadGame();
+            t.cancel();
+            started = false;
+            gameHeadWidth = (gameboard.getWidth() + 1) * 32 + "px";
+            gameHead.setWidth(gameHeadWidth);
+        });
+
+        customMode.addClickListener(clickEvent -> {
+            customGameWindow.setWidth(300.0f, Unit.PIXELS);
+            customGameWindow.setResizable(false);
+            customGameWindow.center();
+            addWindow(customGameWindow);
+        });
+
+        saveRecord.addClickListener(clickEvent -> {
+            Long seconds = getSecondsx();
+            Rank rank = new Rank();
+            rank.setNickname(nickname.getValue());
+            rank.setTime(seconds);
+            rank.setType(type);
+            rankrepo.save(rank);
+            saveRecordWindow.close();
+            gridRankEasy.setItems(rankrepo.getTopOfEasy(9999999L));
+            gridRankMedium.setItems(rankrepo.getTopOfMedium(9999999L));
+            gridRankHard.setItems(rankrepo.getTopOfHard(9999999L));
+            ranks.addTab(gridRankEasy, "Easy Mode");
+            ranks.addTab(gridRankMedium, "Medium Mode");
+            ranks.addTab(gridRankHard, "Hard Mode");
+        });
+        startCustom.addClickListener(clickEvent -> {
+            Notification error = new Notification("Zbyt dużo min.");
+            final int rows = Integer.parseInt(customHight.getValue());
+            final int columns = Integer.parseInt(customWidth.getValue());
+            final int mines = Integer.parseInt(customMines.getValue());
+            try {
+                gameboard.customMode(rows, columns, mines);
+                type = -1;
+                generateMatrixGrid();
+                reloadGame();
+                t.cancel();
+                started = false;
+                gameHeadWidth = (gameboard.getWidth() + 1) * 32 + "px";
+                gameHead.setWidth(gameHeadWidth);
+                customGameWindow.close();
+            } catch (TooManyMinesException e) {
+                error.show(Page.getCurrent());
+            }
+        });
 
         game.addLayoutClickListener(clickEvent -> {
             if (!started) {
-                t.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        ui.access(new Runnable() {
-                            @Override
-                            public void run() {
-                                addSecondsx(1);
-                                String timeString = null;
-                                long seconds = getSecondsx();
-                                timeString = getTimeString(seconds);
-                                gameTime.setValue(timeString);
-                                ui.push();
-                            }
-                        });
-                    }
-                }, 0, 1000);
-                started = true;
+                startTimer();
             }
             Component child = clickEvent.getChildComponent();
             if (child != null) {
@@ -192,8 +294,11 @@ public class home extends UI {
                 gameboard.revealAllFields();
                 refreshGrid();
                 timeRecord = getTimeString(getSecondsx());
-                System.out.println(timeRecord);
+                if (checkRecords(getSecondsx())) {
+                    addWindow(saveRecordWindow);
+                }
                 t.cancel();
+
 
             }
             if (gameboard.isGameLost()) {
@@ -201,6 +306,49 @@ public class home extends UI {
                 t.cancel();
             }
         });
+
+    }
+
+    public boolean checkRecords(Long seconds) {
+        List<Rank> rank = null;
+        if (type == 0) {
+            rank = rankrepo.getTopOfEasy(seconds);
+        } else if (type == 1) {
+            rank = rankrepo.getTopOfMedium(seconds);
+        } else if (type == 2) {
+            rank = rankrepo.getTopOfHard(seconds);
+        } else return false;
+
+        if(rank.size() >= 10) return false;
+        else return true;
+    }
+
+    public void startTimer() {
+        t = new Timer();
+        t.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                ui.access(new Runnable() {
+                    @Override
+                    public void run() {
+                        addSecondsx(1);
+                        String timeString;
+                        long seconds = getSecondsx();
+                        timeString = getTimeString(seconds);
+                        gameTime.setValue(timeString);
+                        ui.push();
+                    }
+                });
+            }
+        }, 0, 1000);
+        started = true;
+    }
+
+    public void reloadGame() {
+        secondsx = 0;
+        flagcount = 0;
+        smiley.setSource(smiley1);
+        gameTime.setValue("00:00");
     }
 
     public String getTimeString(Long seconds) {
@@ -284,8 +432,13 @@ public class home extends UI {
     }
 
 
-    private void generateMatrixGrid(final int rows, final int columns) {
+    private void generateMatrixGrid() {
         game.removeAllComponents();
+        final int rows = gameboard.getHeight();
+        final int columns = gameboard.getWidth();
+        game.setColumns(columns);
+        game.setRows(rows);
+
         game.setHeight("100%");
         Field fieldx = null;
         minesLeft.setValue(Integer.toString(gameboard.getMines()));
