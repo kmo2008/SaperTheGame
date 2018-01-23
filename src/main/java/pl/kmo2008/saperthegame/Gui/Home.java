@@ -170,8 +170,17 @@ public class Home extends UI {
      * 2 - Hard
      */
     int type = 1;
+    /**
+     * Memory for last mines in Custom Mode
+     */
     int lastCustomMines = 0;
+    /**
+     * Memory for last colums in Custom Mode
+     */
     int lastCustomCol = 0;
+    /**
+     * Memory for lasr rows in Custom Mode
+     */
     int lastCustomRow = 0;
 
     /**
