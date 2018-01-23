@@ -69,7 +69,6 @@ public final class Board {
                 shuffle(fields);
             }
             calculateFieldStates();
-            fieldsRevealed++;
         }
         if(fields[y][x].getVisibleState()==VisibleState.UNREVEALED)
         {
