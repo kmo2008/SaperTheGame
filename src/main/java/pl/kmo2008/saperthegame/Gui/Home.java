@@ -306,6 +306,7 @@ public class Home extends UI {
 
         smiley.addClickListener(event -> {
             Notification error = new Notification("Zła liczba min.");
+            Notification errorboard = new Notification("Zła wielkość planszy.");
             if (type == 0) gameboard.easyMode();
             else if (type == 1) gameboard.normalMode();
             else if (type == 2) gameboard.hardMode();
@@ -314,6 +315,9 @@ public class Home extends UI {
                     gameboard.customMode(lastCustomRow, lastCustomCol, lastCustomMines);
                 } catch (WrongNumberOfMinesException e) {
                     error.show(Page.getCurrent());
+                }
+                catch (WrongSizeOfBoardException e) {
+                    errorboard.show(Page.getCurrent());
                 }
             }
             generateMatrixGrid();
@@ -379,6 +383,7 @@ public class Home extends UI {
         });
         startCustom.addClickListener(clickEvent -> {
             Notification error = new Notification("Zła liczba min.");
+            Notification errorboard = new Notification("Zła wielkość planszy.");
             final int rows = Integer.parseInt(customHight.getValue());
             final int columns = Integer.parseInt(customWidth.getValue());
             final int mines = Integer.parseInt(customMines.getValue());
@@ -397,6 +402,9 @@ public class Home extends UI {
                 customGameWindow.close();
             } catch (WrongNumberOfMinesException e) {
                 error.show(Page.getCurrent());
+            }
+            catch (WrongSizeOfBoardException e) {
+                errorboard.show(Page.getCurrent());
             }
         });
 
