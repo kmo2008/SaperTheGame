@@ -350,11 +350,11 @@ public final class Board {
      * @param width width of the board
      * @param mines number of mines, must be less than height times width
      */
-    public void customMode(int height,int width, int mines) throws TooManyMinesException
+    public void customMode(int height,int width, int mines) throws WrongNumberOfMinesException
     {
-        if(mines >= height*width)
+        if(mines >= height*width || mines <=0)
         {
-            throw new TooManyMinesException();
+            throw new WrongNumberOfMinesException();
         }
         this.height=height;
         this.width=width;

@@ -305,14 +305,14 @@ public class Home extends UI {
          */
 
         smiley.addClickListener(event -> {
-            Notification error = new Notification("Zbyt dużo min.");
+            Notification error = new Notification("Zła liczba min.");
             if (type == 0) gameboard.easyMode();
             else if (type == 1) gameboard.normalMode();
             else if (type == 2) gameboard.hardMode();
             else if (type == -1) {
                 try {
                     gameboard.customMode(lastCustomRow, lastCustomCol, lastCustomMines);
-                } catch (TooManyMinesException e) {
+                } catch (WrongNumberOfMinesException e) {
                     error.show(Page.getCurrent());
                 }
             }
@@ -378,7 +378,7 @@ public class Home extends UI {
             ranks.addTab(gridRankHard, "Hard Mode");
         });
         startCustom.addClickListener(clickEvent -> {
-            Notification error = new Notification("Zbyt dużo min.");
+            Notification error = new Notification("Zła liczba min.");
             final int rows = Integer.parseInt(customHight.getValue());
             final int columns = Integer.parseInt(customWidth.getValue());
             final int mines = Integer.parseInt(customMines.getValue());
@@ -395,7 +395,7 @@ public class Home extends UI {
                 gameHeadWidth = (gameboard.getWidth() + 1) * 32 + "px";
                 gameHead.setWidth(gameHeadWidth);
                 customGameWindow.close();
-            } catch (TooManyMinesException e) {
+            } catch (WrongNumberOfMinesException e) {
                 error.show(Page.getCurrent());
             }
         });
