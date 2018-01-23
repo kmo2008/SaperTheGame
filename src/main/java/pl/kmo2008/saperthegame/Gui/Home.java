@@ -8,10 +8,6 @@ import com.vaadin.server.VaadinRequest;
 import com.vaadin.shared.MouseEventDetails;
 import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.ui.*;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.GridLayout;
-import com.vaadin.ui.Image;
-import com.vaadin.ui.Label;
 import org.springframework.beans.factory.annotation.Autowired;
 import pl.kmo2008.saperthegame.Entities.Rank;
 import pl.kmo2008.saperthegame.Logic.*;
@@ -174,9 +170,13 @@ public class Home extends UI {
      * 2 - Hard
      */
     int type = 1;
+    int lastCustomMines = 0;
+    int lastCustomCol = 0;
+    int lastCustomRow = 0;
 
     /**
      * Getter of round time
+     *
      * @return rount time(seconds)
      */
     public long getSecondsx() {
@@ -232,7 +232,7 @@ public class Home extends UI {
          * Layouts  and Components merge
          *
          */
-        recordLayout.addComponents(recordLabel,nickname,saveRecord);
+        recordLayout.addComponents(recordLabel, nickname, saveRecord);
         windowLayout.addComponents(customWidth, customHight, customMines, startCustom);
         menu.addComponents(easyButton, mediumButton, hardButton, customMode, ranks);
         gameHead.addComponents(gameTime, smiley, minesLeft);
@@ -253,13 +253,13 @@ public class Home extends UI {
         minesLeft.setStyleName("labelfont");
         smiley.setSource(smiley1);
         saveRecordWindow.center();
-        gridRankEasy.setColumnOrder("id","nickname","time","type");
+        gridRankEasy.setColumnOrder("id", "nickname", "time", "type");
         gridRankEasy.removeColumn("id");
         gridRankEasy.removeColumn("type");
-        gridRankMedium.setColumnOrder("id","nickname","time","type");
+        gridRankMedium.setColumnOrder("id", "nickname", "time", "type");
         gridRankMedium.removeColumn("id");
         gridRankMedium.removeColumn("type");
-        gridRankHard.setColumnOrder("id","nickname","time","type");
+        gridRankHard.setColumnOrder("id", "nickname", "time", "type");
         gridRankHard.removeColumn("id");
         gridRankHard.removeColumn("type");
         gridRankEasy.setItems(rankrepo.getTopOfEasy(9999999L));
@@ -295,6 +295,25 @@ public class Home extends UI {
          * Listeners
          */
 
+        smiley.addClickListener(event -> {
+            Notification error = new Notification("Zbyt dużo min.");
+            if (type == 0) gameboard.easyMode();
+            else if (type == 1) gameboard.normalMode();
+            else if (type == 2) gameboard.hardMode();
+            else if (type == -1) {
+                try {
+                    gameboard.customMode(lastCustomRow, lastCustomCol, lastCustomMines);
+                } catch (TooManyMinesException e) {
+                    error.show(Page.getCurrent());
+                }
+            }
+            generateMatrixGrid();
+            reloadGame();
+            t.cancel();
+            started = false;
+            gameHeadWidth = (gameboard.getWidth() + 1) * 32 + "px";
+            gameHead.setWidth(gameHeadWidth);
+        });
         easyButton.addClickListener(clickEvent -> {
             gameboard.easyMode();
             type = 0;
@@ -354,6 +373,9 @@ public class Home extends UI {
             final int rows = Integer.parseInt(customHight.getValue());
             final int columns = Integer.parseInt(customWidth.getValue());
             final int mines = Integer.parseInt(customMines.getValue());
+            lastCustomCol = columns;
+            lastCustomMines = mines;
+            lastCustomRow = rows;
             try {
                 gameboard.customMode(rows, columns, mines);
                 type = -1;
@@ -421,6 +443,7 @@ public class Home extends UI {
 
     /**
      * Checking if record is in TOP 10
+     *
      * @param seconds time of round
      * @return Flag  0 - not new record, 1 - new record
      */
@@ -435,7 +458,7 @@ public class Home extends UI {
             rank = rankrepo.getTopOfHard(seconds);
         } else return false;
 
-        if(rank.size() >= 10) return false;
+        if (rank.size() >= 10) return false;
         else return true;
     }
 
@@ -475,6 +498,7 @@ public class Home extends UI {
 
     /**
      * Methond changing time in seconds to string with hours, minutes, and seconds
+     *
      * @param seconds round time(seconds)
      * @return String of time
      */
@@ -537,6 +561,7 @@ public class Home extends UI {
 
     /**
      * Method of resources
+     *
      * @param fieldx Field from Game grid
      * @return Resource for this field
      */
