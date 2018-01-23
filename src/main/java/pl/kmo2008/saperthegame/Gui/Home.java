@@ -26,37 +26,110 @@ import java.util.TimerTask;
 @SpringUI
 @Push
 public class Home extends UI {
+    /**
+     * Wierded gameboard
+     */
     @Autowired
     Board gameboard;
 
+    /**
+     * Wierded rank repository
+     */
     @Autowired
     Rankrepo rankrepo;
 
-    private int flagcount = 0;
-    GridLayout game = new GridLayout();
     /**
-     * Component declarations
+     * Count of flagged fields
+     */
+    private int flagcount = 0;
+    /**
+     * Game layout
+     */
+    GridLayout game = new GridLayout();
+
+    /**
+     * Label of time
      */
     Label gameTime = new Label("00:00");
+    /**
+     * Image with smile
+     */
     Image smiley = new Image();
+    /**
+     * Labef of left mines
+     */
     Label minesLeft = new Label("0");
+    /**
+     * Array of fields resources
+     */
     ThemeResource[][] resources;
+    /**
+     * Button for start Easy mode
+     */
     Button easyButton = new Button("Easy Mode");
+    /**
+     * Button for start Medium mode
+     */
     Button mediumButton = new Button("Medium Mode");
+    /**
+     * Button for start Hard mode
+     */
     Button hardButton = new Button("Hard Mode");
+    /**
+     * Field of popup window with custom mode settings
+     */
     TextField customWidth = new TextField("Szerokość:");
+    /**
+     * Field of popup window with custom mode settings
+     */
     TextField customHight = new TextField("Wysokość:");
+    /**
+     * Field of popup window with custom mode settings
+     */
     TextField customMines = new TextField("Ilosć min: ");
+    /**
+     * Button for  start custom mode
+     */
     Button startCustom = new Button("Start Custom Mode");
+    /**
+     * Button for open custom mode popup
+     */
     Button customMode = new Button("Custom Mode");
+    /**
+     * Custom mode popup window
+     */
     Window customGameWindow = new Window("Custom Game");
+    /**
+     * Win with recod popup window
+     */
     Window saveRecordWindow = new Window("WYGRALES!!!");
+    /**
+     * Label of poprup win window
+     */
     Label recordLabel = new Label("Wygrałeś i znalazłeś się w TOP 10 w tym trybie. Wypełnij, aby zapisać się w rankingu.");
+    /**
+     * Textfield with nickname
+     */
     TextField nickname = new TextField("Twój nick:");
+    /**
+     * Button for save the record int database
+     */
     Button saveRecord = new Button("Zapisz");
+    /**
+     * Grid for show TOP 10
+     */
     Grid<Rank> gridRankEasy = new Grid<>(Rank.class);
+    /**
+     * Grid for show TOP 10
+     */
     Grid<Rank> gridRankMedium = new Grid<>(Rank.class);
+    /**
+     * Grid for show TOP 10
+     */
     Grid<Rank> gridRankHard = new Grid<>(Rank.class);
+    /**
+     * Layout for tabs with ranks
+     */
     Accordion ranks = new Accordion();
 
     /**
@@ -81,21 +154,53 @@ public class Home extends UI {
     ThemeResource smiley2 = new ThemeResource("img/smiley2.png");
     ThemeResource smiley4 = new ThemeResource("img/smiley4.png");
 
+    /**
+     * All seconds in round
+     */
     long secondsx = 0;
+    /**
+     * Flag of started game
+     */
     boolean started = false;
+    /**
+     * String for time showing
+     */
     String timeRecord = null;
+    /**
+     * Type of game
+     * -1 - Custom
+     * 0 - Easy
+     * 1 - Medium
+     * 2 - Hard
+     */
     int type = 1;
 
+    /**
+     * Getter of round time
+     * @return rount time(seconds)
+     */
     public long getSecondsx() {
         return secondsx;
     }
 
-    public void addSecondsx(long secondsx) {
+    /**
+     * Round time incrementation
+     */
+    public void addSecondsx() {
         this.secondsx++;
     }
 
+    /**
+     * Get this UI
+     */
     UI ui = getUI();
+    /**
+     * Timer for round
+     */
     Timer t = new Timer();
+    /**
+     * String of width head table
+     */
     String gameHeadWidth;
 
     @Override
@@ -124,13 +229,11 @@ public class Home extends UI {
         HorizontalLayout gameAndRanks = new HorizontalLayout();
 
         /**
-         * Layouts merge
+         * Layouts  and Components merge
          *
          */
         recordLayout.addComponents(recordLabel,nickname,saveRecord);
         windowLayout.addComponents(customWidth, customHight, customMines, startCustom);
-        customGameWindow.setContent(windowLayout);
-        saveRecordWindow.setContent(recordLayout);
         menu.addComponents(easyButton, mediumButton, hardButton, customMode, ranks);
         gameHead.addComponents(gameTime, smiley, minesLeft);
         gameBox.addComponents(gameHead, game);
@@ -139,6 +242,8 @@ public class Home extends UI {
         /**
          * Content settings
          */
+        customGameWindow.setContent(windowLayout);
+        saveRecordWindow.setContent(recordLayout);
         setContent(head);
 
         /**
@@ -148,11 +253,6 @@ public class Home extends UI {
         minesLeft.setStyleName("labelfont");
         smiley.setSource(smiley1);
         saveRecordWindow.center();
-
-        /**
-         * Layout settings and listenners
-         *
-         */
         gridRankEasy.setColumnOrder("id","nickname","time","type");
         gridRankEasy.removeColumn("id");
         gridRankEasy.removeColumn("type");
@@ -168,23 +268,32 @@ public class Home extends UI {
         ranks.addTab(gridRankEasy, "Easy Mode");
         ranks.addTab(gridRankMedium, "Medium Mode");
         ranks.addTab(gridRankHard, "Hard Mode");
+
+        /**
+         * Layout settings and listenners
+         *
+         */
+
         gameBox.setComponentAlignment(gameHead, Alignment.TOP_CENTER);
         gameHead.setComponentAlignment(gameTime, Alignment.BOTTOM_LEFT);
         gameHead.setComponentAlignment(smiley, Alignment.BOTTOM_CENTER);
         gameHead.setComponentAlignment(minesLeft, Alignment.BOTTOM_RIGHT);
-        game.setSizeUndefined();
         gameHead.setStyleName("gameHead");
-        gameHead.setMargin(true);
-        gameHeadWidth = (gameboard.getWidth() + 1) * 32 + "px";
+        gameHeadWidth = (gameboard.getWidth() + 3) * 32 + "px";
         gameHead.setWidth(gameHeadWidth);
-        head.setSizeFull();
+        gameHead.setMargin(true);
+        game.setSizeUndefined();
         game.setMargin(true);
         game.setHeightUndefined();
         game.setRows(gameboard.getHeight());
         game.setColumns(gameboard.getWidth());
         game.setDefaultComponentAlignment(Alignment.MIDDLE_CENTER);
         generateMatrixGrid();
+        head.setSizeFull();
 
+        /**
+         * Listeners
+         */
 
         easyButton.addClickListener(clickEvent -> {
             gameboard.easyMode();
@@ -310,6 +419,12 @@ public class Home extends UI {
 
     }
 
+    /**
+     * Checking if record is in TOP 10
+     * @param seconds time of round
+     * @return Flag  0 - not new record, 1 - new record
+     */
+
     public boolean checkRecords(Long seconds) {
         List<Rank> rank = null;
         if (type == 0) {
@@ -324,6 +439,9 @@ public class Home extends UI {
         else return true;
     }
 
+    /**
+     * Method of starting an timer for count round time
+     */
     public void startTimer() {
         t = new Timer();
         t.schedule(new TimerTask() {
@@ -332,7 +450,7 @@ public class Home extends UI {
                 ui.access(new Runnable() {
                     @Override
                     public void run() {
-                        addSecondsx(1);
+                        addSecondsx();
                         String timeString;
                         long seconds = getSecondsx();
                         timeString = getTimeString(seconds);
@@ -345,6 +463,9 @@ public class Home extends UI {
         started = true;
     }
 
+    /**
+     * Basic reload game and variables
+     */
     public void reloadGame() {
         secondsx = 0;
         flagcount = 0;
@@ -352,6 +473,11 @@ public class Home extends UI {
         gameTime.setValue("00:00");
     }
 
+    /**
+     * Methond changing time in seconds to string with hours, minutes, and seconds
+     * @param seconds round time(seconds)
+     * @return String of time
+     */
     public String getTimeString(Long seconds) {
         String timeString = null;
         long minutes = 0;
@@ -384,6 +510,9 @@ public class Home extends UI {
         return timeString;
     }
 
+    /**
+     * Method refreshing changed fields on Game Grid
+     */
     private void refreshGrid() {
         Field fieldx = null;
         int mines = gameboard.getMines() - flagcount;
@@ -406,6 +535,11 @@ public class Home extends UI {
         }
     }
 
+    /**
+     * Method of resources
+     * @param fieldx Field from Game grid
+     * @return Resource for this field
+     */
     private ThemeResource getFieldResurce(Field fieldx) {
         ThemeResource resource = null;
         if (fieldx.getVisibleState() == VisibleState.UNREVEALED)
@@ -432,7 +566,9 @@ public class Home extends UI {
         return resource;
     }
 
-
+    /**
+     * Generate Grid of first time
+     */
     private void generateMatrixGrid() {
         game.removeAllComponents();
         final int rows = gameboard.getHeight();
