@@ -352,7 +352,7 @@ public final class Board {
      */
     public void customMode(int height,int width, int mines) throws WrongNumberOfMinesException,WrongSizeOfBoardException
     {
-        if(height<6 || width<6)
+        if(height<6 || width<6 || height>40 || width>40)
         {
             throw new WrongSizeOfBoardException();
         }
